@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Проекты · Update Tracker{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div class="eyebrow">Слежение</div>
+  <h1>Проекты</h1>
+  <p class="lede">Образы контейнеров из Docker Hub, за которыми следит наблюдатель.
+  Отслеживается продуктивная версия <span class="mono">:latest</span> — при смене образа
+  вы получите уведомление с описанием изменений на русском.</p>
+</div>
+
+<div class="card">
+  <h2>Добавить проект</h2>
+  <form method="post" action="/projects" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="field"><label>Ссылка на образ</label>
+      <input name="image_ref" required placeholder="wg-easy/wg-easy:latest  или  nginx">
+      <span class="hint">Например: <span class="mono">wg-easy/wg-easy:latest</span>. Тег можно не указывать — по умолчанию <span class="mono">latest</span>.</span>
+    </div>
+    <div class="row">
+      <div class="field"><label>Название (необязательно)</label><input name="name" placeholder="по умолчанию — имя образа"></div>
+      <div class="field"><label>Репозиторий релизов (для описания)</label><input name="repo_url" placeholder="https://github.com/wg-easy/wg-easy"></div>
+    </div>
+    <div class="field"><label>Описание</label><input name="description" placeholder="Зачем вы это отслеживаете"></div>
+    <div class="check"><input type="checkbox" name="enabled" checked><label>Отслеживать</label></div>
+    <div class="actions"><button class="btn" type="submit">Добавить проект</button></div>
+  </form>
+</div>
+
+<h2>Отслеживаемые проекты</h2>
+{% if projects %}
+<div class="panel">
+  <table>
+    <thead><tr><th>Проект</th><th>Образ</th><th>Текущая версия</th><th>Проверен</th><th>Статус</th><th></th></tr></thead>
+    <tbody>
+    {% for p in projects %}
+      <tr>
+        <td>{{ p['name'] }}</td>
+        <td class="mono">{{ p['image_ref'] }}</td>
+        <td class="ver">{{ p['last_version'] or (p['last_digest'] or '—')[:19] }}</td>
+        <td class="mono" style="color:var(--faint)">{{ (p['last_checked'] or '—')[:16].replace('T',' ') }}</td>
+        <td><span class="badge {{ 'on' if p['enabled'] else 'off' }}">{{ 'активен' if p['enabled'] else 'выкл' }}</span></td>
+        <td>
+          <div class="actions">
+            <form method="post" action="/projects/{{ p['id'] }}/check">
+              <input type="hidden" name="csrf" value="{{ csrf }}">
+              <button class="btn ghost sm" type="submit">Проверить</button>
+            </form>
+            <details class="item" style="margin:0;border:0;background:none">
+              <summary class="btn ghost sm" style="list-style:none">Изменить</summary>
+              <div class="body" style="position:relative">
+                <form method="post" action="/projects/{{ p['id'] }}/update" class="stack" style="margin-top:10px">
+                  <input type="hidden" name="csrf" value="{{ csrf }}">
+                  <div class="field"><label>Образ</label><input name="image_ref" value="{{ p['image_ref'] }}" required></div>
+                  <div class="field"><label>Название</label><input name="name" value="{{ p['name'] }}"></div>
+                  <div class="field"><label>Репозиторий релизов</label><input name="repo_url" value="{{ p['repo_url'] or '' }}"></div>
+                  <div class="field"><label>Описание</label><input name="description" value="{{ p['description'] or '' }}"></div>
+                  <div class="check"><input type="checkbox" name="enabled" {{ 'checked' if p['enabled'] else '' }}><label>Отслеживать</label></div>
+                  <div class="actions">
+                    <button class="btn sm" type="submit">Сохранить</button>
+                  </div>
+                </form>
+                <form method="post" action="/projects/{{ p['id'] }}/delete" style="margin-top:8px"
+                      onsubmit="return confirm('Удалить проект «{{ p['name'] }}»?')">
+                  <input type="hidden" name="csrf" value="{{ csrf }}">
+                  <button class="btn danger sm" type="submit">Удалить</button>
+                </form>
+              </div>
+            </details>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty">Пока ничего не отслеживается. Добавьте первый образ выше.</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Обзор · Update Tracker{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div class="eyebrow">Командный пункт</div>
+  <div class="toprow">
+    <h1>Обзор</h1>
+    <form method="post" action="/run-now">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="btn ghost sm" type="submit">Отправить дайджест сейчас</button>
+    </form>
+  </div>
+</div>
+
+<div class="sweep">
+  <span class="label">Следующая рассылка</span>
+  <span class="when">{{ next_broadcast or "не запланирована" }}</span>
+  <span class="spacer"></span>
+  <span class="tag">{{ projects|length }} проектов · {{ resources|length }} ресурсов</span>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="n">{{ projects|selectattr('enabled')|list|length }}</div><div class="k">отслеживается</div></div>
+  <div class="stat"><div class="n">{{ pending_updates }}</div><div class="k">новых обновлений</div></div>
+  <div class="stat"><div class="n">{{ resources|length }}</div><div class="k">ресурсов на дашборде</div></div>
+</div>
+
+<h2>Ресурсы</h2>
+{% if resources %}
+<div class="grid">
+  {% for r in resources %}
+  <a class="tile" href="{{ '/go/' ~ r['id'] ~ '/' if r['auth_type'] != 'link' else r['url'] }}"
+     {{ 'target=_blank rel=noopener' if r['auth_type'] == 'link' else '' }}>
+    <span class="ic">{{ r['icon'] or '🔗' }}</span>
+    <span class="t-name">{{ r['name'] }}</span>
+    {% if r['description'] %}<span class="t-desc">{{ r['description'] }}</span>{% endif %}
+    <span class="t-host">{{ r['url'] }}</span>
+    {% if r['auth_type'] == 'basic' %}<span class="tag">авто-вход</span>
+    {% elif r['auth_type'] == 'form' %}<span class="tag">авто-вход (форма)</span>{% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">Пока нет ресурсов. Добавьте первый в разделе «<a href="/resources">Ресурсы</a>».</div>
+{% endif %}
+
+{% endblock %}

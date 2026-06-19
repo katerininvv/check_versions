@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}Update Tracker{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div>
+      <div class="brand">
+        <span class="beacon" aria-hidden="true"></span>
+        <span class="brand-name">Update Tracker</span>
+      </div>
+      <div class="brand-sub">watchtower</div>
+    </div>
+    <nav class="nav">
+      <a href="/" class="{{ 'active' if path == '/' else '' }}"><span class="nav-dot"></span> Обзор</a>
+      <a href="/projects" class="{{ 'active' if path.startswith('/projects') else '' }}"><span class="nav-dot"></span> Проекты</a>
+      <a href="/resources" class="{{ 'active' if path.startswith('/resources') else '' }}"><span class="nav-dot"></span> Ресурсы</a>
+      <a href="/history" class="{{ 'active' if path.startswith('/history') else '' }}"><span class="nav-dot"></span> История</a>
+      <a href="/settings" class="{{ 'active' if path.startswith('/settings') else '' }}"><span class="nav-dot"></span> Настройки</a>
+    </nav>
+    <div class="side-foot">
+      {% if user %}<div class="who">{{ user['login'] }}</div>{% endif %}
+      <form method="post" action="/logout" style="margin-top:6px">
+        <button class="linkbtn" type="submit">Выйти</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    {% if flashes %}
+    <div class="flashes">
+      {% for f in flashes %}<div class="flash {{ f.kind }}">{{ f.msg }}</div>{% endfor %}
+    </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

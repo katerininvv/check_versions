@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Настройки · Update Tracker{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div class="eyebrow">Конфигурация</div>
+  <h1>Настройки</h1>
+</div>
+
+<div class="card">
+  <h2>Telegram</h2>
+  <form method="post" action="/settings" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="field"><label>Токен бота</label>
+      <input name="telegram_token" type="password" autocomplete="off"
+             placeholder="{{ '•••• токен сохранён, оставьте пустым' if has_telegram else '123456:ABC...' }}">
+    </div>
+    <div class="field"><label>chat_id (личный чат)</label>
+      <input name="telegram_chat_id" value="{{ s.get('telegram_chat_id') or '' }}" placeholder="например 123456789">
+      <span class="hint">Напишите боту <span class="mono">/start</span>, затем нажмите «Определить chat_id».</span>
+    </div>
+    <!-- скрытые поля для сохранения остальных настроек вместе -->
+    <input type="hidden" name="translator_provider" value="{{ s.get('translator_provider') or 'google' }}">
+    <input type="hidden" name="libretranslate_url" value="{{ s.get('libretranslate_url') or '' }}">
+    <input type="hidden" name="timezone" value="{{ s.get('timezone') or 'Europe/Moscow' }}">
+    <input type="hidden" name="schedule_day" value="{{ s.get('schedule_day') or 'sun' }}">
+    <input type="hidden" name="schedule_hour" value="{{ s.get('schedule_hour') or '12' }}">
+    <input type="hidden" name="schedule_minute" value="{{ s.get('schedule_minute') or '0' }}">
+    <input type="hidden" name="poll_interval" value="{{ s.get('poll_interval') or '60' }}">
+    <div class="actions"><button class="btn sm" type="submit">Сохранить</button></div>
+  </form>
+  <div class="actions" style="margin-top:12px">
+    <form method="post" action="/settings/detect-chatid">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="btn ghost sm" type="submit">Определить chat_id</button>
+    </form>
+    <form method="post" action="/settings/test-telegram">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="btn ghost sm" type="submit">Отправить тестовое сообщение</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Перевод и описания</h2>
+  <form method="post" action="/settings" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="field"><label>Провайдер перевода</label>
+      {% set prov = s.get('translator_provider') or 'google' %}
+      <select name="translator_provider">
+        <option value="google" {{ 'selected' if prov=='google' else '' }}>Google — бесплатно, без ключа (рекомендуется)</option>
+        <option value="libretranslate" {{ 'selected' if prov=='libretranslate' else '' }}>LibreTranslate — свой сервер (бесплатно, приватно)</option>
+        <option value="mymemory" {{ 'selected' if prov=='mymemory' else '' }}>MyMemory — бесплатно, суточный лимит</option>
+        <option value="deepl" {{ 'selected' if prov=='deepl' else '' }}>DeepL — нужен платный ключ</option>
+      </select>
+      <span class="hint">Google работает сразу и без ключа. Поля ниже нужны только для LibreTranslate или DeepL.</span>
+    </div>
+    <div class="row">
+      <div class="field"><label>URL сервера LibreTranslate</label>
+        <input name="libretranslate_url" value="{{ s.get('libretranslate_url') or '' }}" placeholder="http://libretranslate:5000">
+        <span class="hint">Если подняли контейнер рядом — адрес его API.</span>
+      </div>
+      <div class="field"><label>Ключ LibreTranslate (если требуется)</label>
+        <input name="libretranslate_api_key" type="password" autocomplete="off"
+               placeholder="{{ '•••• сохранён' if has_libre else 'обычно не нужен' }}">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Ключ DeepL API (только для провайдера DeepL)</label>
+        <input name="deepl_api_key" type="password" autocomplete="off"
+               placeholder="{{ '•••• ключ сохранён' if has_deepl else 'xxxxxxxx:fx' }}">
+      </div>
+      <div class="field"><label>Токен GitHub (необязательно, для описаний релизов)</label>
+        <input name="github_token" type="password" autocomplete="off"
+               placeholder="{{ '•••• сохранён' if has_github else 'ghp_... — повышает лимит GitHub API' }}">
+      </div>
+    </div>
+    <input type="hidden" name="telegram_chat_id" value="{{ s.get('telegram_chat_id') or '' }}">
+    <input type="hidden" name="timezone" value="{{ s.get('timezone') or 'Europe/Moscow' }}">
+    <input type="hidden" name="schedule_day" value="{{ s.get('schedule_day') or 'sun' }}">
+    <input type="hidden" name="schedule_hour" value="{{ s.get('schedule_hour') or '12' }}">
+    <input type="hidden" name="schedule_minute" value="{{ s.get('schedule_minute') or '0' }}">
+    <input type="hidden" name="poll_interval" value="{{ s.get('poll_interval') or '60' }}">
+    <div class="actions"><button class="btn sm" type="submit">Сохранить</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Расписание рассылки</h2>
+  <form method="post" action="/settings" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="row">
+      <div class="field"><label>День недели</label>
+        <select name="schedule_day">
+          {% set days = [('mon','Понедельник'),('tue','Вторник'),('wed','Среда'),('thu','Четверг'),('fri','Пятница'),('sat','Суббота'),('sun','Воскресенье')] %}
+          {% for v,t in days %}<option value="{{ v }}" {{ 'selected' if (s.get('schedule_day') or 'sun')==v else '' }}>{{ t }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field"><label>Часовой пояс</label>
+        <input name="timezone" value="{{ s.get('timezone') or 'Europe/Moscow' }}">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Час</label><input name="schedule_hour" type="number" min="0" max="23" value="{{ s.get('schedule_hour') or '12' }}"></div>
+      <div class="field"><label>Минута</label><input name="schedule_minute" type="number" min="0" max="59" value="{{ s.get('schedule_minute') or '0' }}"></div>
+    </div>
+    <div class="field"><label>Интервал опроса реестра (минуты)</label>
+      <input name="poll_interval" type="number" min="5" value="{{ s.get('poll_interval') or '60' }}">
+      <span class="hint">Как часто проверять Docker Hub. Рассылка — отдельно по расписанию выше.</span>
+    </div>
+    <input type="hidden" name="telegram_chat_id" value="{{ s.get('telegram_chat_id') or '' }}">
+    <input type="hidden" name="translator_provider" value="{{ s.get('translator_provider') or 'google' }}">
+    <input type="hidden" name="libretranslate_url" value="{{ s.get('libretranslate_url') or '' }}">
+    <div class="actions"><button class="btn sm" type="submit">Сохранить</button></div>
+  </form>
+  <p class="hint" style="margin-top:10px">Следующая рассылка: <span class="mono" style="color:var(--accent)">{{ next_broadcast or 'не запланирована' }}</span></p>
+</div>
+
+<div class="card">
+  <h2>Смена пароля</h2>
+  <form method="post" action="/settings/change-password" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="field"><label>Текущий пароль</label><input name="current_password" type="password" autocomplete="current-password" required></div>
+    <div class="field"><label>Новый пароль (от 8 символов)</label><input name="new_password" type="password" autocomplete="new-password" required></div>
+    <div class="actions"><button class="btn sm" type="submit">Изменить пароль</button></div>
+  </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Ресурсы · Update Tracker{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div class="eyebrow">Дашборд</div>
+  <h1>Ресурсы</h1>
+  <p class="lede">Сервисы, которые вы открываете с главной страницы. Для типа «авто-вход»
+  приложение открывает ресурс уже авторизованным через встроенный прокси; учётные данные
+  хранятся в зашифрованном виде.</p>
+</div>
+
+<div class="card">
+  <h2>Добавить ресурс</h2>
+  <form method="post" action="/resources" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="row">
+      <div class="field"><label>Название</label><input name="name" required placeholder="Мой сервис"></div>
+      <div class="field"><label>Иконка (эмодзи)</label><input name="icon" placeholder="🛡 / 🗄 / 📊"></div>
+    </div>
+    <div class="field"><label>Адрес (URL)</label>
+      <input name="url" required placeholder="https://150.251.155.157:54321/vitt/">
+    </div>
+    <div class="field"><label>Описание</label>
+      <input name="description" placeholder="Что это за сервис">
+    </div>
+    <div class="row">
+      <div class="field"><label>Тип авторизации</label>
+        <select name="auth_type">
+          <option value="link">Просто ссылка (без авто-входа)</option>
+          <option value="basic">HTTP Basic Auth (надёжный авто-вход)</option>
+          <option value="form">Форма логина (best-effort)</option>
+        </select>
+        <span class="hint">Basic Auth — самый стабильный авто-вход.</span>
+      </div>
+      <div class="field"><label>Порядок</label><input name="sort_order" type="number" value="0"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Логин на ресурсе</label><input name="username" autocomplete="off"></div>
+      <div class="field"><label>Пароль на ресурсе</label><input name="secret" type="password" autocomplete="new-password"></div>
+    </div>
+    <details>
+      <summary class="hint" style="cursor:pointer">Дополнительно: настройка формы логина</summary>
+      <div class="row" style="margin-top:12px">
+        <div class="field"><label>URL формы логина</label><input name="login_url" placeholder="https://.../login"></div>
+        <div class="field"><label>Поле логина</label><input name="username_field" placeholder="username"></div>
+      </div>
+      <div class="field"><label>Поле пароля</label><input name="password_field" placeholder="password"></div>
+    </details>
+    <div class="check"><input type="checkbox" name="verify_tls" id="vtls"><label for="vtls">Проверять TLS-сертификат (выключите для самоподписанных)</label></div>
+    <div class="actions"><button class="btn" type="submit">Добавить ресурс</button></div>
+  </form>
+</div>
+
+<h2>Список ресурсов</h2>
+{% if resources %}
+  {% for r in resources %}
+  <details class="item">
+    <summary>
+      <span class="ic" style="font-size:16px">{{ r['icon'] or '🔗' }}</span>
+      <span class="summary-main">
+        <span class="sm-name">{{ r['name'] }}</span>
+        <span class="sm-sub">{{ r['url'] }}</span>
+      </span>
+      <span class="tag">{{ {'link':'ссылка','basic':'basic','form':'форма'}[r['auth_type']] }}</span>
+    </summary>
+    <div class="body">
+      <form method="post" action="/resources/{{ r['id'] }}/update" class="stack">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <div class="row">
+          <div class="field"><label>Название</label><input name="name" value="{{ r['name'] }}" required></div>
+          <div class="field"><label>Иконка</label><input name="icon" value="{{ r['icon'] or '' }}"></div>
+        </div>
+        <div class="field"><label>Адрес (URL)</label><input name="url" value="{{ r['url'] }}" required></div>
+        <div class="field"><label>Описание</label><input name="description" value="{{ r['description'] or '' }}"></div>
+        <div class="row">
+          <div class="field"><label>Тип авторизации</label>
+            <select name="auth_type">
+              <option value="link" {{ 'selected' if r['auth_type']=='link' else '' }}>Просто ссылка</option>
+              <option value="basic" {{ 'selected' if r['auth_type']=='basic' else '' }}>HTTP Basic Auth</option>
+              <option value="form" {{ 'selected' if r['auth_type']=='form' else '' }}>Форма логина</option>
+            </select>
+          </div>
+          <div class="field"><label>Порядок</label><input name="sort_order" type="number" value="{{ r['sort_order'] }}"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Логин</label><input name="username" autocomplete="off" placeholder="{{ '•••• сохранён' if r['username_enc'] else '' }}"></div>
+          <div class="field"><label>Пароль</label><input name="secret" type="password" autocomplete="new-password" placeholder="{{ '•••• сохранён, оставьте пустым' if r['secret_enc'] else '' }}"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>URL формы логина</label><input name="login_url" value="{{ r['login_url'] or '' }}"></div>
+          <div class="field"><label>Поле логина</label><input name="username_field" value="{{ r['username_field'] or '' }}"></div>
+        </div>
+        <div class="field"><label>Поле пароля</label><input name="password_field" value="{{ r['password_field'] or '' }}"></div>
+        <div class="check"><input type="checkbox" name="verify_tls" {{ 'checked' if r['verify_tls'] else '' }}><label>Проверять TLS-сертификат</label></div>
+        <div class="actions">
+          <button class="btn sm" type="submit">Сохранить</button>
+        </div>
+      </form>
+      <form method="post" action="/resources/{{ r['id'] }}/delete" style="margin-top:10px"
+            onsubmit="return confirm('Удалить ресурс «{{ r['name'] }}»?')">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button class="btn danger sm" type="submit">Удалить</button>
+      </form>
+    </div>
+  </details>
+  {% endfor %}
+{% else %}
+<div class="empty">Ресурсов пока нет.</div>
+{% endif %}
+
+{% endblock %}

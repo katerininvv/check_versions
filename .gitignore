@@ -1,0 +1,31 @@
+# Секреты и локальная конфигурация — НИКОГДА не коммитим
+.env
+*.env
+!.env.example
+
+# Данные приложения (БД, TLS-сертификаты)
+/data/
+data/
+*.db
+*.sqlite
+*.sqlite3
+certs/
+*.crt
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Архивы сборки
+*.zip
+*.tar.gz
+
+# Системное / редакторы
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

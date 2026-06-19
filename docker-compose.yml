@@ -1,0 +1,42 @@
+services:
+  update-tracker:
+    build: .
+    # Либо используйте готовый образ после сборки:
+    # image: update-tracker:latest
+    container_name: update-tracker
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${HTTPS_PORT:-18237}:${HTTPS_PORT:-18237}"
+    volumes:
+      - ut_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsk", "https://127.0.0.1:${HTTPS_PORT:-18237}/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  ut_data:
+
+# ─────────────────────────────────────────────────────────────────────────────
+# (Необязательно) Приватный перевод своим контейнером LibreTranslate.
+# Раскомментируйте блок ниже, затем в UI → Настройки → Перевод выберите
+# провайдер "LibreTranslate" и укажите URL:  http://libretranslate:5000
+#
+#   libretranslate:
+#     image: libretranslate/libretranslate:latest
+#     container_name: libretranslate
+#     restart: unless-stopped
+#     environment:
+#       # Ограничиваем загрузку моделей нужными языками (англ->рус и др.)
+#       LT_LOAD_ONLY: "en,ru,de,fr"
+#       LT_DISABLE_WEB_UI: "true"
+#     volumes:
+#       - lt_models:/home/libretranslate/.local/share/argos-translate
+#
+# И добавьте том:
+# volumes:
+#   lt_models:
+# ─────────────────────────────────────────────────────────────────────────────

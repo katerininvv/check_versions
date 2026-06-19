@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}История · Update Tracker{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div class="eyebrow">Журнал</div>
+  <h1>История</h1>
+</div>
+
+<h2>Обнаруженные обновления</h2>
+{% if events %}
+<div class="panel">
+  <table>
+    <thead><tr><th>Когда</th><th>Проект</th><th>Версия</th><th>Описание</th><th></th></tr></thead>
+    <tbody>
+    {% for e in events %}
+      <tr>
+        <td class="mono" style="color:var(--faint)">{{ (e['detected_at'] or '')[:16].replace('T',' ') }}</td>
+        <td>{{ e['project_name'] or '—' }}</td>
+        <td class="ver">
+          {% if e['old_version'] and e['new_version'] %}{{ e['old_version'] }}<span class="arrow">→</span>{{ e['new_version'] }}
+          {% else %}{{ e['new_version'] or (e['new_digest'] or '')[:19] }}{% endif %}
+        </td>
+        <td style="max-width:380px">{{ (e['notes_ru'] or e['notes_original'] or '—')[:200] }}{{ '…' if (e['notes_ru'] or e['notes_original'] or '')|length > 200 else '' }}</td>
+        <td><span class="badge {{ 'on' if e['notified'] else 'upd' }}">{{ 'отправлено' if e['notified'] else 'в очереди' }}</span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty">Обновлений пока не зафиксировано.</div>
+{% endif %}
+
+<h2>Действия в системе</h2>
+{% if audit %}
+<div class="panel">
+  <table>
+    <thead><tr><th>Когда</th><th>Действие</th><th>Детали</th><th>IP</th></tr></thead>
+    <tbody>
+    {% for a in audit %}
+      <tr>
+        <td class="mono" style="color:var(--faint)">{{ (a['created_at'] or '')[:16].replace('T',' ') }}</td>
+        <td class="mono">{{ a['action'] }}</td>
+        <td>{{ a['detail'] or '' }}</td>
+        <td class="mono" style="color:var(--faint)">{{ a['ip'] or '' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty">Журнал пуст.</div>
+{% endif %}
+
+{% endblock %}

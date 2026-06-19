@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Вход · Update Tracker</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="brand">
+      <span class="beacon" aria-hidden="true"></span>
+      <span class="brand-name">Update Tracker</span>
+    </div>
+    <div class="brand-sub">watchtower</div>
+
+    {% if flashes %}
+    <div class="flashes">
+      {% for f in flashes %}<div class="flash {{ f.kind }}">{{ f.msg }}</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="/login" class="stack">
+      <div class="field">
+        <label for="login">Логин</label>
+        <input id="login" name="login" autocomplete="username" autofocus required>
+      </div>
+      <div class="field">
+        <label for="password">Пароль</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn" type="submit">Войти</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>
