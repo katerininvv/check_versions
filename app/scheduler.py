@@ -32,16 +32,19 @@ def reschedule() -> None:
     minute = int(database.get_setting("schedule_minute", str(config.DEFAULT_SCHEDULE_MINUTE)))
     interval = int(database.get_setting("poll_interval", str(config.DEFAULT_POLL_INTERVAL)))
 
+    # Воскресная рассылка сама делает проверку перед отправкой.
     _scheduler.add_job(
         lambda: jobs.run_broadcast(force=False),
         trigger=CronTrigger(day_of_week=day, hour=hour, minute=minute, timezone=_tz()),
         id="broadcast", replace_existing=True, misfire_grace_time=3600,
     )
-    _scheduler.add_job(
-        jobs.run_poll,
-        trigger=IntervalTrigger(minutes=max(5, interval)),
-        id="poll", replace_existing=True, misfire_grace_time=600,
-    )
+    # Промежуточный опрос в течение недели — только если интервал задан (> 0).
+    if interval and interval >= 1:
+        _scheduler.add_job(
+            jobs.run_poll,
+            trigger=IntervalTrigger(minutes=max(5, interval)),
+            id="poll", replace_existing=True, misfire_grace_time=600,
+        )
 
 
 def start() -> None:

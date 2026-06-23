@@ -243,7 +243,7 @@ app/
   translator.py    перевод через DeepL (подключаемый провайдер)
   notifier.py      отправка в Telegram + сборка дайджеста
   jobs.py          опрос проектов + формирование рассылки
-  scheduler.py     APScheduler (Вс 12:00 + периодический опрос)
+  scheduler.py     APScheduler (Вс 12:00; промежуточный опрос — опционально)
   proxy.py         обратный прокси с авто-входом
   templates/       интерфейс (Jinja2)
   static/          стили

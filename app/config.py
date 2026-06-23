@@ -26,8 +26,9 @@ SEED_TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 SEED_DEEPL_API_KEY = os.environ.get("DEEPL_API_KEY", "")
 SEED_GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 
-# Интервал опроса реестра (минуты). Рассылка — отдельно по расписанию.
-DEFAULT_POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL_MINUTES", "60"))
+# Интервал промежуточного опроса реестра (минуты). 0 = выключено: проверка будет
+# только перед воскресной рассылкой (этого достаточно для еженедельного дайджеста).
+DEFAULT_POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL_MINUTES", "0"))
 
 # Расписание рассылки по умолчанию: воскресенье 12:00.
 DEFAULT_SCHEDULE_DAY = os.environ.get("SCHEDULE_DAY", "sun")

@@ -104,9 +104,9 @@
       <div class="field"><label>Час</label><input name="schedule_hour" type="number" min="0" max="23" value="{{ s.get('schedule_hour') or '12' }}"></div>
       <div class="field"><label>Минута</label><input name="schedule_minute" type="number" min="0" max="59" value="{{ s.get('schedule_minute') or '0' }}"></div>
     </div>
-    <div class="field"><label>Интервал опроса реестра (минуты)</label>
-      <input name="poll_interval" type="number" min="5" value="{{ s.get('poll_interval') or '60' }}">
-      <span class="hint">Как часто проверять Docker Hub. Рассылка — отдельно по расписанию выше.</span>
+    <div class="field"><label>Промежуточный опрос реестра (минуты)</label>
+      <input name="poll_interval" type="number" min="0" value="{{ s.get('poll_interval') or '0' }}">
+      <span class="hint">0 = проверять только перед воскресной рассылкой. Больше нуля — ещё и в течение недели (для «живого» дашборда).</span>
     </div>
     <input type="hidden" name="telegram_chat_id" value="{{ s.get('telegram_chat_id') or '' }}">
     <input type="hidden" name="translator_provider" value="{{ s.get('translator_provider') or 'google' }}">
