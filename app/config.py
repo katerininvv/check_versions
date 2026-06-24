@@ -1,6 +1,8 @@
 """Конфигурация приложения из переменных окружения."""
 import os
 
+APP_VERSION = "2.0"
+
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 DB_PATH = os.path.join(DATA_DIR, "app.db")
 
@@ -30,10 +32,10 @@ SEED_GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 # только перед воскресной рассылкой (этого достаточно для еженедельного дайджеста).
 DEFAULT_POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL_MINUTES", "0"))
 
-# Расписание рассылки по умолчанию: воскресенье 12:00.
-DEFAULT_SCHEDULE_DAY = os.environ.get("SCHEDULE_DAY", "sun")
-DEFAULT_SCHEDULE_HOUR = int(os.environ.get("SCHEDULE_HOUR", "12"))
-DEFAULT_SCHEDULE_MINUTE = int(os.environ.get("SCHEDULE_MINUTE", "0"))
+# Времена ежедневных проверок (по три раза в день: утро/день/вечер), формат HH:MM.
+DEFAULT_CHECK_MORNING = os.environ.get("CHECK_TIME_MORNING", "09:00")
+DEFAULT_CHECK_NOON = os.environ.get("CHECK_TIME_NOON", "13:00")
+DEFAULT_CHECK_EVENING = os.environ.get("CHECK_TIME_EVENING", "19:00")
 
 # Время жизни сессии (секунды).
 SESSION_MAX_AGE = int(os.environ.get("SESSION_MAX_AGE", str(60 * 60 * 12)))

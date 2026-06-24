@@ -85,16 +85,20 @@ def _date_ru() -> str:
     return dt.datetime.now().strftime("%d.%m.%Y")
 
 
+def _now_ru() -> str:
+    return dt.datetime.now().strftime("%d.%m.%Y %H:%M")
+
+
 def build_digest(events: list, project_names: dict, checked_count: int) -> str:
     """Собирает HTML-сообщение для Telegram по списку событий обновлений."""
     if not events:
         return (
-            f"🛰 <b>Обновления за неделю</b> · {_date_ru()}\n\n"
+            f"🛰 <b>Проверка обновлений</b> · {_now_ru()}\n\n"
             f"Новых обновлений не обнаружено.\n"
             f"Проверено проектов: {checked_count}."
         )
 
-    lines = [f"🛰 <b>Обновления за неделю</b> · {_date_ru()}", ""]
+    lines = [f"🛰 <b>Обнаружены обновления</b> · {_now_ru()}", ""]
     for e in events:
         name = _esc(project_names.get(e["project_id"], "проект"))
         old_v = e["old_version"] or (e["old_digest"] or "")[:19]

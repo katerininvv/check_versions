@@ -8,14 +8,14 @@
     <h1>Обзор</h1>
     <form method="post" action="/run-now">
       <input type="hidden" name="csrf" value="{{ csrf }}">
-      <button class="btn ghost sm" type="submit">Отправить дайджест сейчас</button>
+      <button class="btn ghost sm" type="submit">Проверить сейчас</button>
     </form>
   </div>
 </div>
 
 <div class="sweep">
-  <span class="label">Следующая рассылка</span>
-  <span class="when">{{ next_broadcast or "не запланирована" }}</span>
+  <span class="label">Следующая проверка</span>
+  <span class="when">{{ next_check or "не запланирована" }}</span>
   <span class="spacer"></span>
   <span class="tag">{{ projects|length }} проектов · {{ resources|length }} ресурсов</span>
 </div>

@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>{% block title %}Update Tracker{% endblock %}</title>
+  <script>
+  /* Тема до отрисовки страницы — без мигания */
+  (function(){
+    try{
+      var p = localStorage.getItem('ut_theme') || 'auto', t;
+      if(p==='light'||p==='dark'){ t=p; }
+      else if(p==='time'){ var h=new Date().getHours(); t=(h>=7&&h<19)?'light':'dark'; }
+      else { t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'; }
+      document.documentElement.setAttribute('data-theme', t);
+    }catch(e){}
+  })();
+  </script>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -26,6 +38,8 @@
     </nav>
     <div class="side-foot">
       {% if user %}<div class="who">{{ user['login'] }}</div>{% endif %}
+      <div class="brand-sub" style="margin:0 0 6px">v{{ version }}</div>
+      <button class="linkbtn theme-toggle" type="button" id="themeToggle">Тема: авто</button>
       <form method="post" action="/logout" style="margin-top:6px">
         <button class="linkbtn" type="submit">Выйти</button>
       </form>
@@ -41,5 +55,36 @@
     {% block content %}{% endblock %}
   </main>
 </div>
+
+<script>
+/* Переключатель темы: авто → светлая → тёмная → по времени */
+(function(){
+  var order=['auto','light','dark','time'];
+  var labels={auto:'авто',light:'светлая',dark:'тёмная',time:'по времени'};
+  function resolve(p){
+    if(p==='light'||p==='dark') return p;
+    if(p==='time'){ var h=new Date().getHours(); return (h>=7&&h<19)?'light':'dark'; }
+    return (window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';
+  }
+  function apply(p){
+    document.documentElement.setAttribute('data-theme', resolve(p));
+    var b=document.getElementById('themeToggle'); if(b) b.textContent='Тема: '+labels[p];
+  }
+  var btn=document.getElementById('themeToggle');
+  if(btn){
+    apply(localStorage.getItem('ut_theme')||'auto');
+    btn.addEventListener('click',function(){
+      var i=order.indexOf(localStorage.getItem('ut_theme')||'auto');
+      var n=order[(i+1)%order.length];
+      localStorage.setItem('ut_theme',n); apply(n);
+    });
+  }
+  if(window.matchMedia){
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){
+      if((localStorage.getItem('ut_theme')||'auto')==='auto') apply('auto');
+    });
+  }
+})();
+</script>
 </body>
 </html>

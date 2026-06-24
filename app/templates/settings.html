@@ -19,14 +19,6 @@
       <input name="telegram_chat_id" value="{{ s.get('telegram_chat_id') or '' }}" placeholder="например 123456789">
       <span class="hint">Напишите боту <span class="mono">/start</span>, затем нажмите «Определить chat_id».</span>
     </div>
-    <!-- скрытые поля для сохранения остальных настроек вместе -->
-    <input type="hidden" name="translator_provider" value="{{ s.get('translator_provider') or 'google' }}">
-    <input type="hidden" name="libretranslate_url" value="{{ s.get('libretranslate_url') or '' }}">
-    <input type="hidden" name="timezone" value="{{ s.get('timezone') or 'Europe/Moscow' }}">
-    <input type="hidden" name="schedule_day" value="{{ s.get('schedule_day') or 'sun' }}">
-    <input type="hidden" name="schedule_hour" value="{{ s.get('schedule_hour') or '12' }}">
-    <input type="hidden" name="schedule_minute" value="{{ s.get('schedule_minute') or '0' }}">
-    <input type="hidden" name="poll_interval" value="{{ s.get('poll_interval') or '60' }}">
     <div class="actions"><button class="btn sm" type="submit">Сохранить</button></div>
   </form>
   <div class="actions" style="margin-top:12px">
@@ -75,45 +67,34 @@
                placeholder="{{ '•••• сохранён' if has_github else 'ghp_... — повышает лимит GitHub API' }}">
       </div>
     </div>
-    <input type="hidden" name="telegram_chat_id" value="{{ s.get('telegram_chat_id') or '' }}">
-    <input type="hidden" name="timezone" value="{{ s.get('timezone') or 'Europe/Moscow' }}">
-    <input type="hidden" name="schedule_day" value="{{ s.get('schedule_day') or 'sun' }}">
-    <input type="hidden" name="schedule_hour" value="{{ s.get('schedule_hour') or '12' }}">
-    <input type="hidden" name="schedule_minute" value="{{ s.get('schedule_minute') or '0' }}">
-    <input type="hidden" name="poll_interval" value="{{ s.get('poll_interval') or '60' }}">
     <div class="actions"><button class="btn sm" type="submit">Сохранить</button></div>
   </form>
 </div>
 
 <div class="card">
-  <h2>Расписание рассылки</h2>
+  <h2>Расписание проверок</h2>
+  <p class="hint" style="margin-top:-6px;margin-bottom:6px">Проекты проверяются три раза в день. Сообщение приходит, только если что-то обновилось.</p>
   <form method="post" action="/settings" class="stack">
     <input type="hidden" name="csrf" value="{{ csrf }}">
     <div class="row">
-      <div class="field"><label>День недели</label>
-        <select name="schedule_day">
-          {% set days = [('mon','Понедельник'),('tue','Вторник'),('wed','Среда'),('thu','Четверг'),('fri','Пятница'),('sat','Суббота'),('sun','Воскресенье')] %}
-          {% for v,t in days %}<option value="{{ v }}" {{ 'selected' if (s.get('schedule_day') or 'sun')==v else '' }}>{{ t }}</option>{% endfor %}
-        </select>
+      <div class="field"><label>Утро</label>
+        <input name="check_time_morning" type="time" value="{{ s.get('check_time_morning') or '09:00' }}">
+      </div>
+      <div class="field"><label>День</label>
+        <input name="check_time_noon" type="time" value="{{ s.get('check_time_noon') or '13:00' }}">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Вечер</label>
+        <input name="check_time_evening" type="time" value="{{ s.get('check_time_evening') or '19:00' }}">
       </div>
       <div class="field"><label>Часовой пояс</label>
         <input name="timezone" value="{{ s.get('timezone') or 'Europe/Moscow' }}">
       </div>
     </div>
-    <div class="row">
-      <div class="field"><label>Час</label><input name="schedule_hour" type="number" min="0" max="23" value="{{ s.get('schedule_hour') or '12' }}"></div>
-      <div class="field"><label>Минута</label><input name="schedule_minute" type="number" min="0" max="59" value="{{ s.get('schedule_minute') or '0' }}"></div>
-    </div>
-    <div class="field"><label>Промежуточный опрос реестра (минуты)</label>
-      <input name="poll_interval" type="number" min="0" value="{{ s.get('poll_interval') or '0' }}">
-      <span class="hint">0 = проверять только перед воскресной рассылкой. Больше нуля — ещё и в течение недели (для «живого» дашборда).</span>
-    </div>
-    <input type="hidden" name="telegram_chat_id" value="{{ s.get('telegram_chat_id') or '' }}">
-    <input type="hidden" name="translator_provider" value="{{ s.get('translator_provider') or 'google' }}">
-    <input type="hidden" name="libretranslate_url" value="{{ s.get('libretranslate_url') or '' }}">
     <div class="actions"><button class="btn sm" type="submit">Сохранить</button></div>
   </form>
-  <p class="hint" style="margin-top:10px">Следующая рассылка: <span class="mono" style="color:var(--accent)">{{ next_broadcast or 'не запланирована' }}</span></p>
+  <p class="hint" style="margin-top:10px">Следующая проверка: <span class="mono" style="color:var(--accent)">{{ next_check or 'не запланирована' }}</span></p>
 </div>
 
 <div class="card">

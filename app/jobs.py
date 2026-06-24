@@ -1,6 +1,8 @@
-"""Основная логика заданий: опрос проектов и формирование/рассылка дайджеста."""
-import datetime as dt
+"""Основная логика заданий: опрос проектов и отправка уведомлений об обновлениях.
 
+Модель: несколько раз в день проверяем проекты. Если с прошлой проверки появились
+новые обновления — присылаем сообщение в Telegram. Если обновлений нет — молчим.
+"""
 from . import database, tracker, releasenotes, translator, notifier
 
 
@@ -14,7 +16,6 @@ def poll_project(project) -> dict:
                 "detail": res["error"]}
 
     if res.get("baseline"):
-        # Первый замер — фиксируем состояние без уведомления.
         database.set_project_state(project["id"], res["new_digest"], res["new_version"])
         return {"id": project["id"], "name": project["name"], "status": "baseline",
                 "detail": res["new_version"] or res["new_digest"][:19]}
@@ -40,37 +41,35 @@ def poll_project(project) -> dict:
 
 
 def run_poll() -> list[dict]:
-    """Опрашивает все включённые проекты."""
-    results = []
-    for project in database.list_projects(enabled_only=True):
-        results.append(poll_project(project))
+    """Опрашивает все включённые проекты (без отправки уведомлений)."""
+    results = [poll_project(p) for p in database.list_projects(enabled_only=True)]
     database.log_action("poll", f"проверено: {len(results)}")
     return results
 
 
-def run_broadcast(force: bool = False) -> dict:
-    """Собирает дайджест из необработанных событий, переводит и отправляет в Telegram.
+def run_check_and_notify(force: bool = False) -> dict:
+    """Проверяет проекты и присылает уведомление, ЕСЛИ есть новые обновления.
 
-    Идемпотентность: при автозапуске не отправляет повторно в один и тот же день.
+    Если обновлений нет — ничего не отправляет (при force=True отправит сообщение
+    «обновлений нет» — удобно для ручной проверки связи).
     """
-    today = dt.date.today().isoformat()
-    last = database.get_setting("last_broadcast_date", "")
-    if not force and last == today:
-        return {"sent": False, "reason": "уже отправлено сегодня"}
-
-    # Перед рассылкой — свежий опрос, чтобы данные были актуальны.
     run_poll()
 
     events = database.list_unnotified_events()
     checked = len(database.list_projects(enabled_only=True))
 
-    # Перевод заметок на русский (на этапе рассылки, чтобы экономить вызовы API).
+    if not events and not force:
+        # Тихий режим: нет обновлений — не шлём ничего.
+        database.log_action("check", "обновлений нет")
+        return {"sent": False, "events": 0, "reason": "обновлений нет"}
+
+    # Перевод заметок на русский (только при наличии новых событий).
     for e in events:
         if e["notes_original"] and not e["notes_ru"]:
             ru, ok = translator.translate_to_russian(e["notes_original"])
             if ok:
                 database.update_event_notes(e["id"], ru)
-    events = database.list_unnotified_events()  # перечитываем с переводами
+    events = database.list_unnotified_events()
 
     token = database.get_setting("telegram_token", "")
     chat_id = database.get_setting("telegram_chat_id", "")
@@ -79,9 +78,8 @@ def run_broadcast(force: bool = False) -> dict:
     ok, detail = notifier.send_message(token, chat_id, text)
     if ok:
         database.mark_events_notified([e["id"] for e in events])
-        database.set_setting("last_broadcast_date", today)
-        database.log_action("broadcast", f"событий: {len(events)}")
+        database.log_action("notify", f"обновлений: {len(events)}")
     else:
-        database.log_action("broadcast_error", detail)
+        database.log_action("notify_error", detail)
 
     return {"sent": ok, "events": len(events), "detail": detail}

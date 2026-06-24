@@ -66,7 +66,8 @@ def render(request: Request, name: str, **ctx) -> HTMLResponse:
         "flashes": flashes,
         "user": user,
         "path": request.url.path,
-        "next_broadcast": scheduler.next_broadcast(),
+        "next_check": scheduler.next_check(),
+        "version": config.APP_VERSION,
     }
     base_ctx.update(ctx)
     return templates.TemplateResponse(request, name, base_ctx)
@@ -90,10 +91,9 @@ def on_startup():
     defaults = {
         "translator_provider": "google",
         "timezone": config.TIMEZONE,
-        "schedule_day": config.DEFAULT_SCHEDULE_DAY,
-        "schedule_hour": str(config.DEFAULT_SCHEDULE_HOUR),
-        "schedule_minute": str(config.DEFAULT_SCHEDULE_MINUTE),
-        "poll_interval": str(config.DEFAULT_POLL_INTERVAL),
+        "check_time_morning": config.DEFAULT_CHECK_MORNING,
+        "check_time_noon": config.DEFAULT_CHECK_NOON,
+        "check_time_evening": config.DEFAULT_CHECK_EVENING,
     }
     for k, v in defaults.items():
         if not database.get_setting(k, ""):
@@ -320,18 +320,16 @@ async def settings_save(request: Request):
     form = await request.form()
     if not check_csrf(request, form):
         return RedirectResponse("/settings", status_code=303)
-    # Секреты обновляем только если поле заполнено (иначе сохраняем прежнее).
+    # Секреты обновляем только если поле присутствует и заполнено.
     for key in ("telegram_token", "deepl_api_key", "github_token", "libretranslate_api_key"):
-        if form.get(key):
+        if key in form and form.get(key):
             database.set_setting(key, form.get(key))
-    database.set_setting("telegram_chat_id", form.get("telegram_chat_id") or "")
-    database.set_setting("translator_provider", form.get("translator_provider") or "google")
-    database.set_setting("libretranslate_url", form.get("libretranslate_url") or "")
-    database.set_setting("timezone", form.get("timezone") or config.TIMEZONE)
-    database.set_setting("schedule_day", form.get("schedule_day") or "sun")
-    database.set_setting("schedule_hour", form.get("schedule_hour") or "12")
-    database.set_setting("schedule_minute", form.get("schedule_minute") or "0")
-    database.set_setting("poll_interval", form.get("poll_interval") or "60")
+    # Прочие настройки обновляем только если поле есть в этой форме
+    # (каждая карточка настроек шлёт лишь свои поля — лишнее не затирается).
+    for key in ("telegram_chat_id", "translator_provider", "libretranslate_url",
+                "timezone", "check_time_morning", "check_time_noon", "check_time_evening"):
+        if key in form:
+            database.set_setting(key, form.get(key) or "")
     scheduler.reschedule()
     database.log_action("settings_save", "", client_ip(request))
     flash(request, "Настройки сохранены.")
@@ -401,9 +399,9 @@ async def run_now(request: Request):
     form = await request.form()
     if not check_csrf(request, form):
         return RedirectResponse("/", status_code=303)
-    result = jobs.run_broadcast(force=True)
+    result = jobs.run_check_and_notify(force=True)
     if result["sent"]:
-        flash(request, f"Дайджест отправлен. Событий: {result.get('events', 0)}.")
+        flash(request, f"Сообщение отправлено. Обновлений: {result.get('events', 0)}.")
     else:
         flash(request, f"Не отправлено: {result.get('detail') or result.get('reason')}", "error")
     return RedirectResponse(request.headers.get("referer", "/"), status_code=303)

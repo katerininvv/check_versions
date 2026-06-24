@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Вход · Update Tracker</title>
+  <script>
+  (function(){
+    try{
+      var p = localStorage.getItem('ut_theme') || 'auto', t;
+      if(p==='light'||p==='dark'){ t=p; }
+      else if(p==='time'){ var h=new Date().getHours(); t=(h>=7&&h<19)?'light':'dark'; }
+      else { t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'; }
+      document.documentElement.setAttribute('data-theme', t);
+    }catch(e){}
+  })();
+  </script>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>

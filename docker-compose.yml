@@ -1,8 +1,7 @@
 services:
   update-tracker:
     build: .
-    # Либо используйте готовый образ после сборки:
-    # image: update-tracker:latest
+    image: check-versions:latest
     container_name: update-tracker
     restart: unless-stopped
     env_file: .env
@@ -19,6 +18,9 @@ services:
 
 volumes:
   ut_data:
+    # Фиксированное имя тома: данные сохраняются при любом способе запуска
+    # (ручной docker compose или Arcane) и переживают любые обновления.
+    name: update_tracker_data
 
 # ─────────────────────────────────────────────────────────────────────────────
 # (Необязательно) Приватный перевод своим контейнером LibreTranslate.
