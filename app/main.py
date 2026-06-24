@@ -69,7 +69,7 @@ def render(request: Request, name: str, **ctx) -> HTMLResponse:
         "next_broadcast": scheduler.next_broadcast(),
     }
     base_ctx.update(ctx)
-    return templates.TemplateResponse(name, base_ctx)
+    return templates.TemplateResponse(request, name, base_ctx)
 
 
 def client_ip(request: Request) -> str:
