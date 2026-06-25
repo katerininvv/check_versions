@@ -1,7 +1,6 @@
 services:
   update-tracker:
     build: .
-    image: check-versions:latest
     container_name: update-tracker
     restart: unless-stopped
     env_file: .env
